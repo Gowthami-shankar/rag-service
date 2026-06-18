@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG Intelligence Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-primary: #080b11;
+            --bg-secondary: #0f1420;
+            --card-bg: rgba(17, 24, 39, 0.65);
+            --card-border: rgba(255, 255, 255, 0.07);
+            --card-border-hover: rgba(99, 102, 241, 0.25);
+            
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            
+            --primary: #6366f1;
+            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --primary-glow: rgba(99, 102, 241, 0.35);
+            
+            --success: #10b981;
+            --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --success-glow: rgba(16, 185, 129, 0.2);
+            
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --error-glow: rgba(239, 68, 68, 0.15);
+            --info: #0ea5e9;
+            
+            --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --font-header: 'Outfit', sans-serif;
+            --font-mono: 'Fira Code', monospace;
+            
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-primary);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Header section */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .header-title-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            color: var(--primary);
+            background: rgba(99, 102, 241, 0.15);
+            padding: 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        header h1 {
+            font-family: var(--font-header);
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* Server Connection Badge */
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: var(--transition-smooth);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .connection-status.online .status-dot {
+            background-color: var(--success);
+            box-shadow: 0 0 10px var(--success);
+        }
+
+        .connection-status.offline .status-dot {
+            background-color: var(--error);
+            box-shadow: 0 0 10px var(--error);
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        @media (min-width: 968px) {
+            .dashboard-grid {
+                grid-template-columns: 420px 1fr;
+            }
+        }
+
+        /* Cards styling */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            transition: var(--transition-smooth);
+        }
+
+        .card:hover {
+            border-color: var(--card-border-hover);
+        }
+
+        .card-header-icon {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 14px;
+        }
+
+        .card-header-icon i {
+            color: var(--primary);
+        }
+
+        .card h2 {
+            font-family: var(--font-header);
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Form elements */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .form-label span.value-badge {
+            color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: var(--font-mono);
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 14px;
+            color: var(--text-muted);
+            pointer-events: none;
+            width: 18px;
+            height: 18px;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-family: var(--font-main);
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: var(--transition-smooth);
+        }
+
+        .input-wrapper input[type="text"] {
+            padding-left: 44px;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        /* Sliders styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            margin: 8px 0;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        /* Button styles */
+        button {
+            position: relative;
+            width: 100%;
+            padding: 12px 20px;
+            font-family: var(--font-main);
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px var(--primary-glow);
+            transition: var(--transition-smooth);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px var(--primary-glow);
+            filter: brightness(1.1);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        button:disabled {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* Status Alert Message */
+        .status-alert {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 18px;
+            border-radius: 10px;
+            font-size: 14px;
+            line-height: 1.5;
+            transition: var(--transition-smooth);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .status-alert.info {
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            color: #a5b4fc;
+        }
+
+        .status-alert.success {
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: #a7f3d0;
+        }
+
+        .status-alert.error {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+        }
+
+        .status-alert i {
+            margin-top: 2px;
+            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
+        }
+
+        .status-alert .status-message {
+            flex-grow: 1;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Right Panel workspace */
+        .workspace {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .workspace .card {
+            flex-grow: 1;
+        }
+
+        /* Answer Output Area */
+        .answer-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 10px;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .answer-header {
+            font-size: 15px;
+            font-weight: 700;
+            color: #a5b4fc;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .answer-box {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            line-height: 1.6;
+            font-size: 15px;
+            color: #e5e7eb;
+            white-space: pre-wrap;
+        }
+
+        /* Timings dashboard */
+        .metrics-section {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .metrics-header {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .timing-bar-wrapper {
+            height: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .timing-segment {
+            height: 100%;
+            transition: width 0.5s ease-out;
+        }
+
+        .timing-segment.retrieval {
+            background: var(--info);
+        }
+
+        .timing-segment.generation {
+            background: var(--primary);
+        }
+
+        .metrics-legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 4px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .legend-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+            display: inline-block;
+        }
+
+        .legend-indicator.retrieval { background-color: var(--info); }
+        .legend-indicator.generation { background-color: var(--primary); }
+        .legend-indicator.total { background-color: var(--text-primary); }
+
+        .legend-text span {
+            font-family: var(--font-mono);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Sources panel styling */
+        .sources-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .sources-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .source-accordion-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: var(--transition-smooth);
+        }
+
+        .source-accordion-item:hover {
+            border-color: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .source-accordion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            cursor: pointer;
+            user-select: none;
+            gap: 12px;
+        }
+
+        .source-title-text {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--accent-sky);
+            word-break: break-all;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .source-title-text i {
+            flex-shrink: 0;
+            color: var(--text-muted);
+            width: 14px;
+            height: 14px;
+        }
+
+        .source-arrow {
+            color: var(--text-muted);
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
+            width: 16px;
+            height: 16px;
+        }
+
+        .source-accordion-item.active .source-arrow {
+            transform: rotate(180deg);
+        }
+
+        .source-accordion-content {
+            display: none;
+            padding: 12px 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            background: rgba(0, 0, 0, 0.15);
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            white-space: pre-wrap;
+            font-style: italic;
+        }
+
+        .source-accordion-item.active .source-accordion-content {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Dashboard Header -->
+        <header>
+            <div class="header-title-area">
+                <div class="logo-icon">
+                    <i data-lucide="cpu" style="width: 24px; height: 24px;"></i>
+                </div>
+                <div>
+                    <h1>RAG Intelligence Workspace</h1>
+                    <p>Crawl, Index, and Query Knowledge Bases Locally</p>
+                </div>
+            </div>
+            <!-- API Status Badge -->
+            <div id="connectionBadge" class="connection-status offline">
+                <span class="status-dot"></span>
+                <span id="connectionText">API Server: Checking...</span>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Grid -->
+        <div class="dashboard-grid">
+            
+            <!-- Left Side Control Panel -->
+            <div class="control-panel">
+                <div class="card" style="margin-bottom: 24px;">
+                    <div class="card-header-icon">
+                        <i data-lucide="globe" style="width: 20px; height: 20px;"></i>
+                        <h2>Step 1: Website Crawler</h2>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="crawlUrl">Target URL</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="link"></i>
+                            <input type="text" id="crawlUrl" placeholder="https://example.com">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="maxPages">
+                            Max Pages to Crawl
+                            <span class="value-badge" id="maxPagesVal">30</span>
+                        </label>
+                        <input type="range" id="maxPages" min="1" max="100" value="30">
+                    </div>
+
+                    <button id="crawlBtn">
+                        <i data-lucide="download" style="width: 16px; height: 16px;"></i>
+                        Crawl Target
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header-icon">
+                        <i data-lucide="database" style="width: 20px; height: 20px;"></i>
+                        <h2>Step 2: Vector Indexer</h2>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="chunkSize">
+                            Chunk Size
+                            <span class="value-badge" id="chunkSizeVal">800</span>
+                        </label>
+                        <input type="range" id="chunkSize" min="200" max="2000" step="50" value="800">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="chunkOverlap">
+                            Chunk Overlap
+                            <span class="value-badge" id="chunkOverlapVal">100</span>
+                        </label>
+                        <input type="range" id="chunkOverlap" min="0" max="500" step="10" value="100">
+                    </div>
+
+                    <button id="indexBtn">
+                        <i data-lucide="layers" style="width: 16px; height: 16px;"></i>
+                        Generate Embeddings
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Side Workspace Area -->
+            <div class="workspace">
+                <!-- Query Console Card -->
+                <div class="card" style="flex-grow: 0;">
+                    <div class="card-header-icon">
+                        <i data-lucide="message-square" style="width: 20px; height: 20px;"></i>
+                        <h2>Step 3: Query Workspace</h2>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <textarea id="questionInput" rows="3" placeholder="Enter a question about the indexed content (e.g., What is this website about?)..." style="resize: none; padding-left: 14px;"></textarea>
+                        </div>
+                    </div>
+
+                    <button id="askBtn" style="align-self: flex-end; width: auto; min-width: 150px;">
+                        <i data-lucide="play" style="width: 16px; height: 16px;"></i>
+                        Submit Query
+                    </button>
+                </div>
+
+                <!-- Status & Output Console -->
+                <div class="card" style="display: flex; flex-direction: column; gap: 16px;">
+                    <div class="card-header-icon">
+                        <i data-lucide="terminal" style="width: 20px; height: 20px;"></i>
+                        <h2>Console Output</h2>
+                    </div>
+
+                    <!-- Status Display Area -->
+                    <div id="statusAlert" class="status-alert info" style="display: none;">
+                        <i id="statusIcon" data-lucide="info"></i>
+                        <div class="status-message" id="status">System idle. Ready to crawl.</div>
+                    </div>
+
+                    <!-- Answer Section (Initially hidden) -->
+                    <div id="answerContainer" class="answer-container" style="display: none;">
+                        <div class="answer-header">
+                            <i data-lucide="sparkles" style="width: 18px; height: 18px; color: #a5b4fc;"></i>
+                            Synthesized LLM Answer
+                        </div>
+                        <div id="answer" class="answer-box"></div>
+                        
+                        <!-- Performance Timings breakdown -->
+                        <div class="metrics-section">
+                            <div class="metrics-header">
+                                <span>Performance Metrics</span>
+                                <span id="totalLatencyText" style="color: var(--text-primary); font-weight: 600;">Total: 0 ms</span>
+                            </div>
+                            <div class="timing-bar-wrapper">
+                                <div id="retrievalBar" class="timing-segment retrieval" style="width: 0%;"></div>
+                                <div id="generationBar" class="timing-segment generation" style="width: 0%;"></div>
+                            </div>
+                            <div class="metrics-legend">
+                                <div class="legend-item">
+                                    <span class="legend-indicator retrieval"></span>
+                                    <div class="legend-text">Retrieval: <span id="retrievalTimeText">0 ms</span></div>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-indicator generation"></span>
+                                    <div class="legend-text">LLM Gen: <span id="generationTimeText">0 ms</span></div>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-indicator total"></span>
+                                    <div class="legend-text">Total Latency: <span id="totalTimeText">0 ms</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Source citations lists -->
+                        <div class="sources-section">
+                            <div class="sources-title">Grounded Source Citations</div>
+                            <div id="sources" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const crawlBtn = document.getElementById('crawlBtn');
+        const indexBtn = document.getElementById('indexBtn');
+        const askBtn = document.getElementById('askBtn');
+        
+        const crawlUrlInput = document.getElementById('crawlUrl');
+        const maxPagesInput = document.getElementById('maxPages');
+        const maxPagesVal = document.getElementById('maxPagesVal');
+        
+        const chunkSizeInput = document.getElementById('chunkSize');
+        const chunkSizeVal = document.getElementById('chunkSizeVal');
+        const chunkOverlapInput = document.getElementById('chunkOverlap');
+        const chunkOverlapVal = document.getElementById('chunkOverlapVal');
+        
+        const questionInput = document.getElementById('questionInput');
+        
+        const statusAlert = document.getElementById('statusAlert');
+        const statusIcon = document.getElementById('statusIcon');
+        const statusDiv = document.getElementById('status');
+        
+        const answerContainer = document.getElementById('answerContainer');
+        const answerDiv = document.getElementById('answer');
+        const sourcesDiv = document.getElementById('sources');
+        
+        // Latency Chart elements
+        const totalLatencyText = document.getElementById('totalLatencyText');
+        const retrievalBar = document.getElementById('retrievalBar');
+        const generationBar = document.getElementById('generationBar');
+        const retrievalTimeText = document.getElementById('retrievalTimeText');
+        const generationTimeText = document.getElementById('generationTimeText');
+        const totalTimeText = document.getElementById('totalTimeText');
+
+        const API_BASE_URL = 'http://127.0.0.1:5000';
+
+        // Connect sliders update functions
+        maxPagesInput.addEventListener('input', () => { maxPagesVal.textContent = maxPagesInput.value; });
+        chunkSizeInput.addEventListener('input', () => { chunkSizeVal.textContent = chunkSizeInput.value; });
+        chunkOverlapInput.addEventListener('input', () => { chunkOverlapVal.textContent = chunkOverlapInput.value; });
+
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Helper to update status message alert box
+        function showStatus(message, type = 'info') {
+            statusAlert.style.display = 'flex';
+            statusDiv.textContent = message;
+            
+            // Clean up old classes
+            statusAlert.className = 'status-alert ' + type;
+            
+            let iconName = 'info';
+            if (type === 'success') {
+                iconName = 'check-circle-2';
+            } else if (type === 'error') {
+                iconName = 'alert-triangle';
+            } else if (type === 'loading') {
+                iconName = 'loader-2';
+                // Add spin to loader icon if status is loading
+                statusIcon.innerHTML = `<span class="spinner"></span>`;
+                return;
+            }
+            
+            statusIcon.innerHTML = '';
+            statusIcon.setAttribute('data-lucide', iconName);
+            lucide.createIcons({
+                attrs: {
+                    id: 'statusIcon'
+                },
+                nameAttr: 'data-lucide'
+            });
+        }
+
+        // Check Server Connection on Page Load
+        async function checkServerConnection() {
+            const badge = document.getElementById('connectionBadge');
+            const text = document.getElementById('connectionText');
+            
+            try {
+                // Perform a dummy request
+                await fetch(`${API_BASE_URL}/crawl`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({})
+                });
+                // If it answers at all, it's alive (it will return 400 since payload is empty)
+                badge.className = 'connection-status online';
+                text.textContent = 'API Server: Connected';
+                showStatus('Successfully connected to local server.', 'success');
+            } catch (e) {
+                badge.className = 'connection-status offline';
+                text.textContent = 'API Server: Offline';
+                showStatus('Cannot connect to local Flask server. Please make sure the app is running on port 5000.', 'error');
+            }
+        }
+
+        // Trigger check on load
+        window.addEventListener('load', checkServerConnection);
+
+        // Crawling Request
+        crawlBtn.addEventListener('click', async () => {
+            const url = crawlUrlInput.value.trim();
+            if (!url) {
+                showStatus('Please enter a target URL to crawl.', 'error');
+                return;
+            }
+            showStatus('Crawling website pages in background...', 'loading');
+            crawlBtn.disabled = true;
+            indexBtn.disabled = true;
+            askBtn.disabled = true;
+
+            try {
+                const maxPages = parseInt(maxPagesInput.value, 10);
+                const response = await fetch(`${API_BASE_URL}/crawl`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ start_url: url, max_pages: maxPages })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Crawling failed');
+                
+                showStatus(`Crawling complete! Successfully retrieved ${data.page_count} pages (skipped ${data.skipped_count}).`, 'success');
+            } catch (error) {
+                showStatus(`Crawling failed: ${error.message}`, 'error');
+            } finally {
+                crawlBtn.disabled = false;
+                indexBtn.disabled = false;
+                askBtn.disabled = false;
+            }
+        });
+
+        // Indexing Request
+        indexBtn.addEventListener('click', async () => {
+            showStatus('Segmenting documents and generating vectors...', 'loading');
+            indexBtn.disabled = true;
+            crawlBtn.disabled = true;
+            askBtn.disabled = true;
+
+            try {
+                const chunkSize = parseInt(chunkSizeInput.value, 10);
+                const chunkOverlap = parseInt(chunkOverlapInput.value, 10);
+                const response = await fetch(`${API_BASE_URL}/index`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ chunk_size: chunkSize, chunk_overlap: chunkOverlap })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Indexing failed');
+                
+                showStatus(`Indexing complete! Generated ${data.vector_count} vector embeddings in FAISS vector store.`, 'success');
+            } catch (error) {
+                showStatus(`Indexing failed: ${error.message}`, 'error');
+            } finally {
+                indexBtn.disabled = false;
+                crawlBtn.disabled = false;
+                askBtn.disabled = false;
+            }
+        });
+
+        // Ask Q&A Request
+        askBtn.addEventListener('click', async () => {
+            const question = questionInput.value.trim();
+            if (!question) {
+                showStatus('Please enter a question to ask.', 'error');
+                return;
+            }
+            
+            showStatus('Querying vector index & LLM generating response...', 'loading');
+            askBtn.disabled = true;
+            crawlBtn.disabled = true;
+            indexBtn.disabled = true;
+            answerContainer.style.display = 'none';
+            sourcesDiv.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/ask`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ question: question })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Failed to get an answer');
+
+                showStatus('Answer generated successfully!', 'success');
+                answerDiv.textContent = data.answer;
+                
+                // Process Timings & Update Visual Meter
+                const timings = data.timings || { retrieval_ms: 0, generation_ms: 0, total_ms: 0 };
+                const retrieval = timings.retrieval_ms || 0;
+                const generation = timings.generation_ms || 0;
+                const total = timings.total_ms || (retrieval + generation);
+
+                totalLatencyText.textContent = `Total: ${total} ms`;
+                retrievalTimeText.textContent = `${retrieval} ms`;
+                generationTimeText.textContent = `${generation} ms`;
+                totalTimeText.textContent = `${total} ms`;
+
+                if (total > 0) {
+                    retrievalBar.style.width = `${(retrieval / total) * 100}%`;
+                    generationBar.style.width = `${(generation / total) * 100}%`;
+                } else {
+                    retrievalBar.style.width = '0%';
+                    generationBar.style.width = '0%';
+                }
+
+                // Render Accordion Citations
+                if (data.sources && data.sources.length > 0) {
+                    data.sources.forEach((source, index) => {
+                        const item = document.createElement('div');
+                        item.className = 'source-accordion-item';
+                        
+                        const header = document.createElement('div');
+                        header.className = 'source-accordion-header';
+                        header.innerHTML = `
+                            <span class="source-title-text">
+                                <i data-lucide="file-text"></i>
+                                Citation [${index + 1}]: ${source.url}
+                            </span>
+                            <i data-lucide="chevron-down" class="source-arrow"></i>
+                        `;
+                        
+                        const content = document.createElement('div');
+                        content.className = 'source-accordion-content';
+                        content.textContent = source.snippet;
+                        
+                        header.addEventListener('click', () => {
+                            item.classList.toggle('active');
+                        });
+                        
+                        item.appendChild(header);
+                        item.appendChild(content);
+                        sourcesDiv.appendChild(item);
+                    });
+                    // Refresh Lucide Icons for added accordion elements
+                    lucide.createIcons();
+                } else {
+                    sourcesDiv.innerHTML = '<div style="color: var(--text-muted); font-size:13px; font-style:italic;">No citation sources returned.</div>';
+                }
+
+                answerContainer.style.display = 'flex';
+            } catch (error) {
+                showStatus(`Failed to get answer: ${error.message}`, 'error');
+            } finally {
+                askBtn.disabled = false;
+                crawlBtn.disabled = false;
+                indexBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
