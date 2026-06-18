@@ -1,7 +1,5 @@
 
------
 
-````markdown
 # Retrieval-Augmented Generation (RAG) Service
 
 This project is a complete, self-contained RAG service built for a software engineering take-home assignment. It can crawl a given website, index its content using vector embeddings, and answer questions based strictly on the information it has collected, complete with source citations and performance timings.
